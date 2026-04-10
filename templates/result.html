@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cleanup Complete – Qube Cinema DCP Report</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <style>
+    body { background-color: #f4f6f9; }
+    .hero {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+      color: #fff;
+      padding: 2.5rem 1rem 2rem;
+      text-align: center;
+    }
+    .hero h1 { font-size: 1.8rem; font-weight: 700; }
+    .hero p  { color: #aab4c8; }
+    .summary-card {
+      max-width: 720px;
+      margin: -1.5rem auto 2rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    }
+    .stat-box {
+      text-align: center;
+      padding: 1.2rem;
+      border-radius: 10px;
+      background: #f0f4fc;
+    }
+    .stat-box .value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #3a6fd8;
+    }
+    .col-pill {
+      display: inline-block;
+      background: #e8f0fe;
+      color: #1a4aad;
+      border-radius: 4px;
+      padding: 0.15rem 0.5rem;
+      font-size: 0.78rem;
+      margin: 2px 2px;
+      font-family: monospace;
+    }
+    .col-pill.highlight {
+      background: #d4edda;
+      color: #155724;
+      font-weight: 600;
+    }
+    .col-pill.content-type {
+      background: #fff3cd;
+      color: #856404;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>✅ File Cleaned Successfully</h1>
+  <p>All cleanup rules have been applied. Your file is ready to download.</p>
+</div>
+
+<div class="container">
+
+  <div class="card summary-card">
+    <div class="card-body p-4">
+
+      <!-- Stats row -->
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4">
+          <div class="stat-box">
+            <div class="value">{{ stats.total_rows }}</div>
+            <div class="text-muted small">Total Rows</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-4">
+          <div class="stat-box">
+            <div class="value text-danger">{{ stats.test_rows }}</div>
+            <div class="text-muted small">Flagged as TEST</div>
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="stat-box">
+            <div class="value text-success">{{ stats.columns | length }}</div>
+            <div class="text-muted small">Total Columns</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Download button -->
+      <div class="d-grid mb-4">
+        <a href="/download" class="btn btn-success btn-lg">
+          ⬇️ Download Cleaned CSV
+        </a>
+      </div>
+
+      <!-- Column list -->
+      <h6 class="fw-bold text-secondary mb-2">Output Columns</h6>
+      <div class="mb-3">
+        {% for col in stats.columns %}
+          {% if col == "Sales Region" %}
+            <span class="col-pill highlight">{{ col }} ✨</span>
+          {% elif col == "Content Types" %}
+            <span class="col-pill content-type">{{ col }}</span>
+          {% else %}
+            <span class="col-pill">{{ col }}</span>
+          {% endif %}
+        {% endfor %}
+      </div>
+
+      <div class="text-center mt-3">
+        <a href="/" class="btn btn-outline-secondary">⬆️ Upload Another File</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
