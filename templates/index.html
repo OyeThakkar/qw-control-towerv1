@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Qube Cinema – DCP Master File Cleanup</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <style>
+    body {
+      background-color: #f4f6f9;
+    }
+    .hero {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+      color: #fff;
+      padding: 3rem 1rem 2rem;
+      text-align: center;
+    }
+    .hero h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+    .hero p {
+      color: #aab4c8;
+      max-width: 640px;
+      margin: 0.5rem auto 0;
+    }
+    .upload-card {
+      max-width: 640px;
+      margin: -2rem auto 2rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+    }
+    .drop-zone {
+      border: 2.5px dashed #6c8ebf;
+      border-radius: 10px;
+      padding: 2.5rem 1rem;
+      text-align: center;
+      background: #f0f4fc;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .drop-zone:hover, .drop-zone.dragover {
+      background: #e0eaff;
+      border-color: #3a6fd8;
+    }
+    .drop-zone .icon {
+      font-size: 2.5rem;
+      color: #3a6fd8;
+    }
+    .rules-section {
+      max-width: 800px;
+      margin: 0 auto 3rem;
+    }
+    .rule-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #3a6fd8;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-right: 0.6rem;
+    }
+    .rule-item {
+      display: flex;
+      align-items: flex-start;
+      margin-bottom: 0.75rem;
+    }
+    .spinner-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      color: #fff;
+    }
+    .spinner-overlay.active { display: flex; }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>🎬 Qube Cinema – DCP Report Cleanup</h1>
+  <p>Upload your Weekly DCP Master CSV, and we'll clean it up automatically according to the Qube Cinema data standards.</p>
+</div>
+
+<div class="container">
+
+  <!-- Upload card -->
+  <div class="card upload-card">
+    <div class="card-body p-4">
+
+      {% if error %}
+      <div class="alert alert-danger d-flex align-items-center" role="alert">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
+             class="bi bi-exclamation-triangle-fill me-2 flex-shrink-0" viewBox="0 0 16 16">
+          <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+        </svg>
+        <div>{{ error }}</div>
+      </div>
+      {% endif %}
+
+      <form id="uploadForm" method="POST" action="/upload" enctype="multipart/form-data">
+        <div
+          class="drop-zone mb-3"
+          id="dropZone"
+          onclick="document.getElementById('fileInput').click()"
+        >
+          <div class="icon">📂</div>
+          <div class="mt-2 fw-semibold" id="dropZoneLabel">Click to browse or drag &amp; drop your CSV / Excel file here</div>
+          <div class="text-muted small mt-1">Accepted formats: .csv, .xlsx, .xls</div>
+        </div>
+        <input
+          type="file"
+          id="fileInput"
+          name="file"
+          accept=".csv,.xlsx,.xls"
+          class="d-none"
+          required
+        />
+
+        <div class="d-grid">
+          <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
+            ⚙️ Process &amp; Clean File
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Cleanup rules summary -->
+  <div class="rules-section">
+    <h5 class="fw-bold mb-3 text-center text-secondary">Applied Cleanup Rules</h5>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="rule-item">
+          <span class="rule-badge">1</span>
+          <div><strong>Test Theatre Names:</strong> Marks bookings for <em>Happy Cat</em>, <em>Happy Cow</em>, and <em>Happy Duck</em> as <code>TEST</code>. Only exact case-insensitive matches are flagged; theatres like "Happy Cinemas" are not affected.</div>
+        </div>
+        <div class="rule-item">
+          <span class="rule-badge">2</span>
+          <div><strong>Qube Cinema Inc:</strong> Marks all bookings placed under the <em>Qube Cinema Inc</em> distributor account as <code>TEST</code>.</div>
+        </div>
+        <div class="rule-item">
+          <span class="rule-badge">3</span>
+          <div><strong>Dummy Delivery Notes:</strong> Marks entries with "Dummy booking for Test" or "Dummy booking for Download" in Distributor Delivery Notes as <code>TEST</code>.</div>
+        </div>
+        <div class="rule-item">
+          <span class="rule-badge">4</span>
+          <div><strong>Content Type Propagation:</strong> Within each Work Order, if any row is classified as <em>Feature</em>, all non-TEST rows in that order are set to <code>Feature</code>. Same logic applies for Trailer, Advert, Teaser, Short, and Promo.</div>
+        </div>
+        <div class="rule-item">
+          <span class="rule-badge">5</span>
+          <div><strong>CPL Name Refinement:</strong> Corrects misclassified Feature rows using CPL patterns — <code>ADV</code>→Advert, <code>TLR/TRL</code>→Trailer, <code>SHR</code>→Short, <code>TSR</code>→Teaser.</div>
+        </div>
+        <div class="rule-item">
+          <span class="rule-badge">6</span>
+          <div><strong>VF Content:</strong> Rows where CPL contains "VF" (not "OV"), Content Size &lt; 30 GB, and Content Type is blank → set to <code>VF</code>.</div>
+        </div>
+        <div class="rule-item">
+          <span class="rule-badge">+</span>
+          <div><strong>Sales Region:</strong> A new <em>Sales Region</em> column is inserted immediately after <em>Theatre Region</em>, mapped from the Theatre Region value.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- Loading overlay -->
+<div class="spinner-overlay" id="spinnerOverlay">
+  <div class="spinner-border text-light mb-3" role="status" style="width:3rem;height:3rem;"></div>
+  <div class="fw-semibold fs-5">Processing your file, please wait…</div>
+</div>
+
+<script>
+  const fileInput  = document.getElementById('fileInput');
+  const dropZone   = document.getElementById('dropZone');
+  const submitBtn  = document.getElementById('submitBtn');
+  const label      = document.getElementById('dropZoneLabel');
+  const form       = document.getElementById('uploadForm');
+  const overlay    = document.getElementById('spinnerOverlay');
+
+  function handleFile(file) {
+    if (file) {
+      label.textContent = '📄 ' + file.name;
+      submitBtn.disabled = false;
+    }
+  }
+
+  fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      // Transfer to input
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      fileInput.files = dt.files;
+      handleFile(file);
+    }
+  });
+
+  form.addEventListener('submit', () => {
+    overlay.classList.add('active');
+  });
+</script>
+
+</body>
+</html>
